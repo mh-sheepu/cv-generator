@@ -1,677 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
-const styles = {
-  // Modern Design System
-  container: {
-    maxWidth: 1200,
-    margin: '0 auto',
-    padding: '48px 32px',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    minHeight: '100vh',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    color: '#1e293b',
-    lineHeight: 1.6,
-  },
-  mainCard: {
-    background: '#ffffff',
-    borderRadius: 20,
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    overflow: 'hidden',
-    border: '1px solid rgba(148, 163, 184, 0.1)',
-  },
-  header: {
-    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-    padding: '48px 40px',
-    textAlign: 'center',
-    color: '#ffffff',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.1,
-    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-  },
-  title: {
-    fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
-    fontWeight: 800,
-    margin: 0,
-    letterSpacing: '-0.025em',
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    position: 'relative',
-    zIndex: 1,
-  },
-  subtitle: {
-    fontSize: '1.125rem',
-    fontWeight: 400,
-    margin: '12px 0 0 0',
-    opacity: 0.9,
-    position: 'relative',
-    zIndex: 1,
-  },
-  formContainer: {
-    padding: '40px 32px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 24,
-  },
-  section: {
-    background: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: 16,
-    padding: 28,
-    marginBottom: 24,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  sectionHover: {
-    ':hover': {
-      borderColor: '#667eea',
-      boxShadow: '0 10px 25px -5px rgba(102, 126, 234, 0.15)',
-      transform: 'translateY(-2px)',
-    },
-  },
-  sectionTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    marginBottom: 24,
-    color: '#1e293b',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  sectionIcon: {
-    width: 24,
-    height: 24,
-    color: '#667eea',
-  },
-  formRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 20,
-    marginBottom: 20,
-  },
-  full: {
-    width: '100%',
-  },
-  inputGroup: {
-    position: 'relative',
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    marginBottom: 8,
-    color: '#475569',
-    display: 'block',
-    letterSpacing: '0.025em',
-  },
-  input: {
-    width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: 12,
-    fontSize: '0.95rem',
-    fontFamily: 'inherit',
-    backgroundColor: '#ffffff',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
-    color: '#1e293b',
-    boxSizing: 'border-box',
-    ':focus': {
-      borderColor: '#667eea',
-      boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
-      backgroundColor: '#fefefe',
-    },
-    ':hover': {
-      borderColor: '#cbd5e0',
-    },
-    '::placeholder': {
-      color: '#94a3b8',
-    },
-  },
-  dateInput: {
-    width: '100%',
-    padding: '12px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: 12,
-    fontSize: '0.95rem',
-    fontFamily: 'inherit',
-    backgroundColor: '#ffffff',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
-    color: '#1e293b',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    ':focus': {
-      borderColor: '#667eea',
-      boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
-    },
-    ':hover': {
-      borderColor: '#cbd5e0',
-    },
-  },
-  textarea: {
-    width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: 12,
-    fontSize: '0.95rem',
-    fontFamily: 'inherit',
-    backgroundColor: '#ffffff',
-    minHeight: 120,
-    resize: 'vertical',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
-    color: '#1e293b',
-    lineHeight: 1.6,
-    boxSizing: 'border-box',
-    ':focus': {
-      borderColor: '#667eea',
-      boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
-      backgroundColor: '#fefefe',
-    },
-    ':hover': {
-      borderColor: '#cbd5e0',
-    },
-    '::placeholder': {
-      color: '#94a3b8',
-    },
-  },
-  select: {
-    width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: 12,
-    fontSize: '0.95rem',
-    fontFamily: 'inherit',
-    backgroundColor: '#ffffff',
-    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-    backgroundPosition: 'right 12px center',
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: '16px',
-    paddingRight: '40px',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
-    color: '#1e293b',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    ':focus': {
-      borderColor: '#667eea',
-      boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
-    },
-    ':hover': {
-      borderColor: '#cbd5e0',
-    },
-  },
-  button: {
-    padding: '14px 24px',
-    borderRadius: 12,
-    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '0.95rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 14px 0 rgba(6, 182, 212, 0.3)',
-    letterSpacing: '0.025em',
-    position: 'relative',
-    overflow: 'hidden',
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 25px 0 rgba(6, 182, 212, 0.4)',
-    },
-    ':active': {
-      transform: 'translateY(0)',
-    },
-    ':disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none',
-    },
-  },
-  addButton: {
-    padding: '12px 20px',
-    borderRadius: 10,
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    marginTop: 8,
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 12px 0 rgba(16, 185, 129, 0.3)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    ':hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 6px 20px 0 rgba(16, 185, 129, 0.4)',
-    },
-  },
-  removeButton: {
-    padding: '8px 16px',
-    borderRadius: 8,
-    background: '#fee2e2',
-    color: '#dc2626',
-    border: '1px solid #fecaca',
-    fontSize: '0.8rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    alignSelf: 'flex-start',
-    marginLeft: 12,
-    ':hover': {
-      background: '#dc2626',
-      color: '#ffffff',
-      borderColor: '#dc2626',
-    },
-  },
-  actions: {
-    display: 'flex',
-    gap: 20,
-    justifyContent: 'center',
-    marginTop: 40,
-    flexWrap: 'wrap',
-  },
-  secondaryButton: {
-    padding: '14px 24px',
-    borderRadius: 12,
-    background: '#f8fafc',
-    color: '#64748b',
-    border: '2px solid #e2e8f0',
-    fontSize: '0.95rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    ':hover': {
-      background: '#f1f5f9',
-      borderColor: '#cbd5e0',
-      color: '#475569',
-    },
-  },
-  previewWrap: {
-    marginTop: 40,
-    padding: '40px 0',
-  },
-  previewCard: {
-    background: '#ffffff',
-    borderRadius: 16,
-    boxShadow: '0 8px 22px -6px rgba(15,23,42,0.08)',
-    border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    padding: 0,
-  },
-  previewHeader: {
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    padding: '24px 32px',
-    borderBottom: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  previewTitle: {
-    fontSize: '1.125rem',
-    fontWeight: 700,
-    color: '#1e293b',
-    margin: 0,
-  },
-  previewIcon: {
-    width: 20,
-    height: 20,
-    color: '#667eea',
-  },
-  previewBox: {
-    padding: 32,
-    background: '#ffffff',
-    maxHeight: '700px',
-    overflow: 'auto',
-    lineHeight: 1.7,
-  },
-  loadingSpinner: {
-    display: 'inline-block',
-    width: '20px',
-    height: '20px',
-    border: '3px solid #e2e8f0',
-    borderRadius: '50%',
-    borderTopColor: '#667eea',
-    animation: 'spin 1s ease-in-out infinite',
-  },
-  '@keyframes spin': {
-    to: { transform: 'rotate(360deg)' },
-  },
-  // Modern Design System Styles
-  sectionCard: {
-    background: '#ffffff',
-    borderRadius: 16,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
-    border: '1px solid #e2e8f0',
-    marginBottom: 28,
-    overflow: 'visible',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    ':hover': {
-      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)',
-      transform: 'translateY(-2px)',
-    },
-  },
-  sectionHeader: {
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    padding: '24px 32px',
-    borderBottom: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: '#1e293b',
-    margin: 0,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  sectionBody: {
-    padding: '24px 32px 32px 32px',
-  },
-  sectionIcon: {
-    width: 24,
-    height: 24,
-    color: '#667eea',
-  },
-  entryCard: {
-    background: '#f8fafc',
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 20,
-    border: '1px solid #e2e8f0',
-    position: 'relative',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    ':hover': {
-      background: '#ffffff',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    },
-  },
-  entryHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  entryNumber: {
-    background: '#667eea',
-    color: '#ffffff',
-    width: 28,
-    height: 28,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.875rem',
-    fontWeight: 700,
-  },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 20,
-    marginBottom: 20,
-  },
-  twoColCompact: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 20,
-    marginBottom: 20,
-    alignItems: 'start',
-  },
-  smallGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 20,
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    marginBottom: 8,
-    color: '#475569',
-    display: 'block',
-    letterSpacing: '0.025em',
-  },
-  select: {
-    width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #e2e8f0',
-    borderRadius: 12,
-    fontSize: '0.95rem',
-    fontFamily: 'inherit',
-    backgroundColor: '#ffffff',
-    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-    backgroundPosition: 'right 12px center',
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: '16px',
-    paddingRight: '40px',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
-    color: '#1e293b',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    ':focus': {
-      borderColor: '#667eea',
-      boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)',
-    },
-    ':hover': {
-      borderColor: '#cbd5e0',
-    },
-  },
-  removeIcon: {
-    fontSize: '1.2rem',
-    lineHeight: 1,
-  },
-  addIcon: {
-    fontSize: '1.1rem',
-    fontWeight: 700,
-  },
-  actionSection: {
-    padding: '40px 32px',
-    borderTop: '1px solid #e2e8f0',
-    marginTop: 24,
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: 20,
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-  },
-  primaryButton: {
-    padding: '16px 32px',
-    borderRadius: 12,
-    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '1rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 14px 0 rgba(6, 182, 212, 0.3)',
-    letterSpacing: '0.025em',
-    position: 'relative',
-    overflow: 'hidden',
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 25px 0 rgba(6, 182, 212, 0.4)',
-    },
-    ':active': {
-      transform: 'translateY(0)',
-    },
-    ':disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none',
-    },
-  },
-  successButton: {
-    padding: '16px 32px',
-    borderRadius: 12,
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '1rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.3)',
-    letterSpacing: '0.025em',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 20px 0 rgba(16, 185, 129, 0.4)',
-    },
-  },
-  clearIcon: {
-    fontSize: '1.1rem',
-  },
-  downloadIcon: {
-    fontSize: '1.1rem',
-  },
-  generateIcon: {
-    fontSize: '1.1rem',
-  },
-  emptyPreview: {
-    padding: '64px 32px',
-    textAlign: 'center',
-    color: '#64748b',
-  },
-  emptyIcon: {
-    fontSize: '3.5rem',
-    marginBottom: 20,
-    opacity: 0.5,
-  },
-  emptyText: {
-    fontSize: '1.05rem',
-    fontWeight: 500,
-    lineHeight: 1.6,
-  },
-  previewContainer: {
-    background: '#ffffff',
-    borderRadius: 16,
-    boxShadow: '0 8px 22px -6px rgba(15,23,42,0.08)',
-    border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    marginTop: 32,
-  },
-  previewContent: {
-    padding: 32,
-    background: '#ffffff',
-    maxHeight: '700px',
-    overflow: 'auto',
-    lineHeight: 1.7,
-  },
-  footer: {
-    marginTop: 48,
-    padding: '32px 24px',
-    textAlign: 'center',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-    borderTop: '2px solid #e2e8f0',
-    borderRadius: '16px 16px 0 0',
-  },
-  footerText: {
-    fontSize: '0.95rem',
-    color: '#64748b',
-    fontWeight: 500,
-    margin: 0,
-  },
-  footerLink: {
-    color: '#06b6d4',
-    fontWeight: 600,
-    textDecoration: 'none',
-    transition: 'color 0.2s',
-    ':hover': {
-      color: '#3b82f6',
-    },
-  },
-  aiSection: {
-    padding: '32px 32px 40px 32px',
-    background: '#ffffff',
-    borderRadius: 16,
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    border: '1px solid #e2e8f0',
-    marginBottom: 40,
-  },
-  aiHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 20,
-    color: '#1e293b',
-    fontWeight: 700,
-    fontSize: '1.25rem',
-  },
-  aiTextarea: {
-    width: '100%',
-    minHeight: 120,
-    padding: 16,
-    borderRadius: 12,
-    border: '2px solid #e2e8f0',
-    fontSize: '0.95rem',
-    fontFamily: 'inherit',
-    marginBottom: 20,
-    resize: 'vertical',
-    boxSizing: 'border-box',
-    outline: 'none',
-    transition: 'all 0.2s',
-    ':focus': {
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.1)',
-    },
-  },
-  aiButton: {
-    width: '100%',
-    padding: '16px',
-    borderRadius: 12,
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '1rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 14px 0 rgba(99, 102, 241, 0.3)',
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 25px 0 rgba(99, 102, 241, 0.4)',
-    },
-    ':disabled': {
-      opacity: 0.7,
-      cursor: 'wait',
-      transform: 'none',
-    },
-  },
+// Helper Functions for HTML Generation
+const esc = s => (typeof s === 'string' ? s : '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const para = (text) => typeof text === 'string' && text.trim() ? `<div style="margin:6px 0">${esc(text).replace(/\n/g, '<br/>')}</div>` : '';
+const bullets = (items) => {
+  if (!Array.isArray(items) || items.length === 0) return '';
+  return `<ul style="margin:6px 0 0 18px">${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
 };
 
 function makeHtml(form) {
-  const esc = s => (typeof s === 'string' ? s : '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const bullets = (items) => {
-    if (!Array.isArray(items) || items.length === 0) return '';
-    return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
-  };
-  const para = (text) => typeof text === 'string' && text.trim() ? `<div style="margin:6px 0">${esc(text).replace(/\n/g, '<br/>')}</div>` : '';
-
   const contactLine = [form.email, form.phone, form.linkedin, form.github, form.website].filter(Boolean).map(esc).join(' | ');
 
   return `
@@ -716,8 +54,432 @@ function makeHtml(form) {
 }
 
 export default function App() {
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
+
+  const styles = {
+    container: {
+      maxWidth: 1200,
+      margin: '0 auto',
+      padding: isMobile ? '16px 12px' : '48px 32px',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      minHeight: '100vh',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      color: '#1e293b',
+      lineHeight: 1.6,
+    },
+    mainCard: {
+      background: '#ffffff',
+      borderRadius: isMobile ? 12 : 20,
+      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      overflow: 'hidden',
+      border: '1px solid rgba(148, 163, 184, 0.1)',
+    },
+    header: {
+      background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+      padding: isMobile ? '32px 20px' : '48px 40px',
+      textAlign: 'center',
+      color: '#ffffff',
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    headerPattern: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.1,
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    },
+    title: {
+      fontSize: isMobile ? '2.2rem' : 'clamp(2.5rem, 5vw, 3.5rem)',
+      fontWeight: 800,
+      margin: 0,
+      letterSpacing: '-0.025em',
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      position: 'relative',
+      zIndex: 1,
+    },
+    subtitle: {
+      fontSize: isMobile ? '1rem' : '1.125rem',
+      fontWeight: 400,
+      margin: '12px 0 0 0',
+      opacity: 0.9,
+      position: 'relative',
+      zIndex: 1,
+    },
+    formContainer: {
+      padding: isMobile ? '24px 16px' : '40px 32px',
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: isMobile ? 16 : 24,
+    },
+    sectionCard: {
+      background: '#ffffff',
+      borderRadius: 16,
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
+      border: '1px solid #e2e8f0',
+      marginBottom: isMobile ? 20 : 28,
+      overflow: 'visible',
+    },
+    sectionHeader: {
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      padding: isMobile ? '16px 20px' : '24px 32px',
+      borderBottom: '1px solid #e2e8f0',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    sectionTitle: {
+      fontSize: isMobile ? '1.1rem' : '1.25rem',
+      fontWeight: 700,
+      color: '#1e293b',
+      margin: 0,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+    },
+    sectionBody: {
+      padding: isMobile ? '16px' : '24px 32px 32px 32px',
+    },
+    sectionIcon: {
+      width: 24,
+      height: 24,
+      color: '#667eea',
+    },
+    entryCard: {
+      background: '#f8fafc',
+      borderRadius: 12,
+      padding: isMobile ? 16 : 24,
+      marginBottom: 20,
+      border: '1px solid #e2e8f0',
+      position: 'relative',
+    },
+    entryHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+    },
+    entryNumber: {
+      background: '#667eea',
+      color: '#ffffff',
+      width: 28,
+      height: 28,
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '0.875rem',
+      fontWeight: 700,
+    },
+    formGrid: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
+      gap: isMobile ? 16 : 20,
+      marginBottom: 20,
+    },
+    twoColCompact: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
+      gap: isMobile ? 16 : 20,
+      marginBottom: 20,
+    },
+    smallGrid: {
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+      gap: isMobile ? 16 : 20,
+      marginBottom: 20,
+    },
+    inputGroup: {
+      position: 'relative',
+      marginBottom: isMobile ? 16 : 20,
+    },
+    inputLabel: {
+      fontSize: '0.875rem',
+      fontWeight: 600,
+      marginBottom: 8,
+      color: '#475569',
+      display: 'block',
+      letterSpacing: '0.025em',
+    },
+    input: {
+      width: '100%',
+      padding: isMobile ? '12px 14px' : '14px 16px',
+      border: '2px solid #e2e8f0',
+      borderRadius: 12,
+      fontSize: '0.95rem',
+      fontFamily: 'inherit',
+      backgroundColor: '#ffffff',
+      outline: 'none',
+      color: '#1e293b',
+      boxSizing: 'border-box',
+    },
+    dateInput: {
+      width: '100%',
+      padding: isMobile ? '12px 14px' : '14px 16px',
+      border: '2px solid #e2e8f0',
+      borderRadius: 12,
+      fontSize: '0.95rem',
+      fontFamily: 'inherit',
+      backgroundColor: '#ffffff',
+      outline: 'none',
+      color: '#1e293b',
+      boxSizing: 'border-box',
+    },
+    textarea: {
+      width: '100%',
+      padding: isMobile ? '12px 14px' : '14px 16px',
+      border: '2px solid #e2e8f0',
+      borderRadius: 12,
+      fontSize: '0.95rem',
+      fontFamily: 'inherit',
+      backgroundColor: '#ffffff',
+      minHeight: isMobile ? 100 : 120,
+      resize: 'vertical',
+      outline: 'none',
+      color: '#1e293b',
+      lineHeight: 1.6,
+      boxSizing: 'border-box',
+    },
+    select: {
+      width: '100%',
+      padding: isMobile ? '12px 14px' : '14px 16px',
+      border: '2px solid #e2e8f0',
+      borderRadius: 12,
+      fontSize: '0.95rem',
+      fontFamily: 'inherit',
+      backgroundColor: '#ffffff',
+      outline: 'none',
+      color: '#1e293b',
+      cursor: 'pointer',
+      boxSizing: 'border-box',
+    },
+    addButton: {
+      padding: isMobile ? '10px 16px' : '12px 20px',
+      borderRadius: 10,
+      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      color: '#ffffff',
+      border: 'none',
+      fontSize: '0.875rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      marginTop: 8,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      boxShadow: '0 4px 12px 0 rgba(16, 185, 129, 0.3)',
+    },
+    removeButton: {
+      padding: '6px 12px',
+      borderRadius: 8,
+      background: '#fee2e2',
+      color: '#dc2626',
+      border: '1px solid #fecaca',
+      fontSize: '0.75rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+    },
+    removeIcon: {
+      fontSize: '1.2rem',
+      lineHeight: 1,
+    },
+    addIcon: {
+      fontSize: '1.1rem',
+      fontWeight: 700,
+    },
+    actionSection: {
+      padding: isMobile ? '32px 16px' : '40px 32px',
+      borderTop: '1px solid #e2e8f0',
+      marginTop: 24,
+    },
+    buttonGroup: {
+      display: 'flex',
+      gap: isMobile ? 12 : 20,
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+    },
+    primaryButton: {
+      width: isMobile ? '100%' : 'auto',
+      padding: '16px 32px',
+      borderRadius: 12,
+      background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+      color: '#ffffff',
+      border: 'none',
+      fontSize: '1rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      boxShadow: '0 4px 14px 0 rgba(6, 182, 212, 0.3)',
+      letterSpacing: '0.025em',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    secondaryButton: {
+      width: isMobile ? '100%' : 'auto',
+      padding: '16px 32px',
+      borderRadius: 12,
+      background: '#f8fafc',
+      color: '#64748b',
+      border: '2px solid #e2e8f0',
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    successButton: {
+      width: isMobile ? '100%' : 'auto',
+      padding: '16px 32px',
+      borderRadius: 12,
+      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      color: '#ffffff',
+      border: 'none',
+      fontSize: '1rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.3)',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      justifyContent: 'center',
+    },
+    previewContainer: {
+      background: '#ffffff',
+      borderRadius: 16,
+      boxShadow: '0 8px 22px -6px rgba(15,23,42,0.08)',
+      border: '1px solid #e2e8f0',
+      overflow: 'hidden',
+      marginTop: 32,
+    },
+    previewHeader: {
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      padding: isMobile ? '16px 20px' : '24px 32px',
+      borderBottom: '1px solid #e2e8f0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+    },
+    previewTitle: {
+      fontSize: isMobile ? '1.1rem' : '1.125rem',
+      fontWeight: 700,
+      color: '#1e293b',
+      margin: 0,
+    },
+    previewIcon: {
+      width: 20,
+      height: 20,
+      color: '#667eea',
+    },
+    previewContent: {
+      padding: isMobile ? 16 : 32,
+      background: '#ffffff',
+      maxHeight: isMobile ? '500px' : '700px',
+      overflow: 'auto',
+      lineHeight: 1.7,
+      fontSize: isMobile ? '0.85rem' : '1rem',
+    },
+    emptyPreview: {
+      padding: isMobile ? '40px 20px' : '64px 32px',
+      textAlign: 'center',
+      color: '#64748b',
+    },
+    emptyIcon: {
+      fontSize: isMobile ? '2.5rem' : '3.5rem',
+      marginBottom: 20,
+      opacity: 0.5,
+    },
+    emptyText: {
+      fontSize: isMobile ? '0.9rem' : '1.05rem',
+      fontWeight: 500,
+      lineHeight: 1.6,
+    },
+    footer: {
+      marginTop: isMobile ? 32 : 48,
+      padding: isMobile ? '24px 16px' : '32px 24px',
+      textAlign: 'center',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      borderTop: '2px solid #e2e8f0',
+      borderRadius: '16px 16px 0 0',
+    },
+    footerText: {
+      fontSize: isMobile ? '0.85rem' : '0.95rem',
+      color: '#64748b',
+      fontWeight: 500,
+      margin: 0,
+    },
+    aiSection: {
+      padding: isMobile ? '20px' : '32px 32px 40px 32px',
+      background: '#ffffff',
+      borderRadius: 16,
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      border: '1px solid #e2e8f0',
+      marginBottom: isMobile ? 24 : 40,
+    },
+    aiHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 16,
+      color: '#1e293b',
+      fontWeight: 700,
+      fontSize: isMobile ? '1.1rem' : '1.25rem',
+    },
+    aiTextarea: {
+      width: '100%',
+      minHeight: isMobile ? 80 : 120,
+      padding: 12,
+      borderRadius: 12,
+      border: '2px solid #e2e8f0',
+      fontSize: '0.9rem',
+      fontFamily: 'inherit',
+      marginBottom: 16,
+      resize: 'vertical',
+      boxSizing: 'border-box',
+      outline: 'none',
+    },
+    aiButton: {
+      width: '100%',
+      padding: '14px',
+      borderRadius: 12,
+      background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+      color: '#ffffff',
+      border: 'none',
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    loadingSpinner: {
+      display: 'inline-block',
+      width: '18px',
+      height: '18px',
+      border: '2px solid rgba(255,255,255,0.3)',
+      borderRadius: '50%',
+      borderTopColor: '#ffffff',
+      animation: 'spin 1s linear infinite',
+    },
+    clearIcon: { fontSize: '1.1rem' },
+    downloadIcon: { fontSize: '1.1rem' },
+    generateIcon: { fontSize: '1.1rem' },
+  };
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -742,10 +504,14 @@ export default function App() {
     awards: [],
     publications: [],
     hobbies: [],
-    references: '',
+    references: ''
   });
-  const [cvHtml, setCvHtml] = useState('');
+
   const [loading, setLoading] = useState(false);
+  const [cvHtml, setCvHtml] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
   const previewRef = useRef(null);
 
   const handleGenerateFromPrompt = async () => {
@@ -789,8 +555,6 @@ export default function App() {
     setForm({ ...form, [field]: newArray });
   };
 
-
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -816,25 +580,29 @@ export default function App() {
 
   return (
     <div style={styles.container}>
+      <style>
+        {`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
       <div style={styles.mainCard}>
-        {/* Header Section */}
         <div style={styles.header}>
           <div style={styles.headerPattern}></div>
           <h1 style={styles.title}>CV Generator</h1>
           <p style={styles.subtitle}>Create professional CVs with modern design</p>
         </div>
 
-        {/* Form Section */}
         <div style={styles.formContainer}>
           <form onSubmit={handleSubmit} style={styles.form}>
-            {/* AI Auto-Fill Section */}
             <div style={styles.aiSection}>
               <div style={styles.aiHeader}>
                 <span>✨ AI Auto-Fill</span>
               </div>
               <textarea
                 style={styles.aiTextarea}
-                placeholder="Paste your LinkedIn bio, resume summary, or just describe yourself here... (e.g., 'I am a Senior Developer with 5 years of experience in React and Node.js...')"
+                placeholder="Paste your LinkedIn bio, resume summary, or just describe yourself here..."
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
               />
@@ -848,121 +616,56 @@ export default function App() {
               </button>
             </div>
 
-            {/* Personal Information */}
             <div style={styles.sectionCard}>
               <div style={styles.sectionHeader}>
                 <div style={styles.sectionTitle}>👤 Personal Information</div>
               </div>
-
               <div style={styles.sectionBody}>
                 <div style={styles.inputGroup}>
                   <label style={styles.inputLabel}>Full Name</label>
-                  <input
-                    name="name"
-                    style={styles.input}
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="John Doe"
-                  />
+                  <input name="name" style={styles.input} value={form.name} onChange={handleChange} placeholder="John Doe" />
                 </div>
-
                 <div style={styles.twoColCompact}>
                   <div style={styles.inputGroup}>
                     <label style={styles.inputLabel}>Email</label>
-                    <input
-                      name="email"
-                      type="email"
-                      style={styles.input}
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="john@example.com"
-                    />
+                    <input name="email" type="email" style={styles.input} value={form.email} onChange={handleChange} placeholder="john@example.com" />
                   </div>
                   <div style={styles.inputGroup}>
                     <label style={styles.inputLabel}>Phone</label>
-                    <input
-                      name="phone"
-                      type="tel"
-                      style={styles.input}
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="+1 (555) 123-4567"
-                    />
+                    <input name="phone" type="tel" style={styles.input} value={form.phone} onChange={handleChange} placeholder="+1 (555) 123-4567" />
                   </div>
                 </div>
-
                 <div style={styles.inputGroup}>
                   <label style={styles.inputLabel}>Address</label>
-                  <input
-                    name="address"
-                    style={styles.input}
-                    value={form.address}
-                    onChange={handleChange}
-                    placeholder="123 Main St, City, State, ZIP"
-                  />
+                  <input name="address" style={styles.input} value={form.address} onChange={handleChange} placeholder="123 Main St, City, State, ZIP" />
                 </div>
-
                 <div style={styles.twoColCompact}>
                   <div style={styles.inputGroup}>
                     <label style={styles.inputLabel}>LinkedIn</label>
-                    <input
-                      name="linkedin"
-                      style={styles.input}
-                      value={form.linkedin}
-                      onChange={handleChange}
-                      placeholder="linkedin.com/in/johndoe"
-                    />
+                    <input name="linkedin" style={styles.input} value={form.linkedin} onChange={handleChange} placeholder="linkedin.com/in/johndoe" />
                   </div>
                   <div style={styles.inputGroup}>
                     <label style={styles.inputLabel}>GitHub</label>
-                    <input
-                      name="github"
-                      style={styles.input}
-                      value={form.github}
-                      onChange={handleChange}
-                      placeholder="github.com/johndoe"
-                    />
+                    <input name="github" style={styles.input} value={form.github} onChange={handleChange} placeholder="github.com/johndoe" />
                   </div>
                 </div>
-
                 <div style={styles.twoColCompact}>
                   <div style={styles.inputGroup}>
                     <label style={styles.inputLabel}>Website</label>
-                    <input
-                      name="website"
-                      style={styles.input}
-                      value={form.website}
-                      onChange={handleChange}
-                      placeholder="johndoe.com"
-                    />
+                    <input name="website" style={styles.input} value={form.website} onChange={handleChange} placeholder="johndoe.com" />
                   </div>
                   <div style={styles.inputGroup}>
                     <label style={styles.inputLabel}>Date of Birth</label>
-                    <input
-                      name="dob"
-                      type="date"
-                      style={styles.dateInput}
-                      value={form.dob}
-                      onChange={handleChange}
-                    />
+                    <input name="dob" type="date" style={styles.dateInput} value={form.dob} onChange={handleChange} />
                   </div>
                 </div>
-
                 <div style={styles.inputGroup}>
                   <label style={styles.inputLabel}>Nationality</label>
-                  <input
-                    name="nationality"
-                    style={styles.input}
-                    value={form.nationality}
-                    onChange={handleChange}
-                    placeholder="American"
-                  />
+                  <input name="nationality" style={styles.input} value={form.nationality} onChange={handleChange} placeholder="American" />
                 </div>
               </div>
             </div>
 
-
-            {/* Professional Summary */}
             <div style={styles.sectionCard}>
               <div style={styles.sectionHeader}>
                 <div style={styles.sectionTitle}>Professional Summary</div>
@@ -970,43 +673,12 @@ export default function App() {
               </div>
               <div style={styles.sectionBody}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.inputLabel}>Professional Summary Title</label>
-                  <input
-                    name="summaryTitle"
-                    style={styles.input}
-                    value={form.summaryTitle}
-                    onChange={handleChange}
-                    placeholder="e.g., Digital Marketing | SEO | SEM"
-                  />
+                  <label style={styles.inputLabel}>Title</label>
+                  <input name="summaryTitle" style={styles.input} value={form.summaryTitle} onChange={handleChange} placeholder="e.g., Software Engineer" />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.inputLabel}>Professional Summary</label>
-                  <textarea
-                    name="summaryParagraph"
-                    style={styles.textarea}
-                    value={form.summaryParagraph}
-                    onChange={handleChange}
-                    placeholder="Write a compelling summary of your professional background and key strengths..."
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div style={styles.sectionCard}>
-              <div style={styles.sectionHeader}>
-                <div style={styles.sectionTitle}>Career Objective</div>
-                <div style={styles.sectionIcon}>🎯</div>
-              </div>
-              <div style={styles.sectionBody}>
-                <div style={styles.inputGroup}>
-                  <label style={styles.inputLabel}>Career Objective</label>
-                  <textarea
-                    name="objective"
-                    style={styles.textarea}
-                    value={form.objective}
-                    onChange={handleChange}
-                    placeholder="Describe your career goals and what you hope to achieve..."
-                  />
+                  <label style={styles.inputLabel}>Summary</label>
+                  <textarea name="summaryParagraph" style={styles.textarea} value={form.summaryParagraph} onChange={handleChange} placeholder="Summary..." />
                 </div>
               </div>
             </div>
@@ -1021,52 +693,18 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('experience', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('experience', index)} style={styles.removeButton}>×</button>
                     </div>
                     <div style={styles.formGrid}>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Position</label>
-                        <input placeholder="e.g. Software Engineer" value={exp.position} onChange={(e) => handleArrayChange('experience', index, 'position', e.target.value)} style={styles.input} />
-                      </div>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Company</label>
-                        <input placeholder="e.g. Tech Corp" value={exp.company} onChange={(e) => handleArrayChange('experience', index, 'company', e.target.value)} style={styles.input} />
-                      </div>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Employment Type</label>
-                        <select value={exp.type} onChange={(e) => handleArrayChange('experience', index, 'type', e.target.value)} style={styles.select}>
-                          <option value="">Select Type</option>
-                          <option value="Full-time">Full-time</option>
-                          <option value="Part-time">Part-time</option>
-                          <option value="Internship">Internship</option>
-                          <option value="Freelance">Freelance</option>
-                          <option value="Contract">Contract</option>
-                          <option value="Volunteer">Volunteer</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div style={styles.smallGrid}>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Start Date</label>
-                        <input placeholder="e.g. Jan 2020" value={exp.startDate} onChange={(e) => handleArrayChange('experience', index, 'startDate', e.target.value)} style={styles.input} />
-                      </div>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>End Date</label>
-                        <input placeholder="e.g. Present" value={exp.endDate} onChange={(e) => handleArrayChange('experience', index, 'endDate', e.target.value)} style={styles.input} />
-                      </div>
+                      <input placeholder="Position" value={exp.position} onChange={(e) => handleArrayChange('experience', index, 'position', e.target.value)} style={styles.input} />
+                      <input placeholder="Company" value={exp.company} onChange={(e) => handleArrayChange('experience', index, 'company', e.target.value)} style={styles.input} />
                     </div>
                     <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Description</label>
-                      <textarea placeholder="Describe your responsibilities, achievements, and key contributions..." value={exp.description} onChange={(e) => handleArrayChange('experience', index, 'description', e.target.value)} style={styles.textarea} />
+                      <textarea placeholder="Description" value={exp.description} onChange={(e) => handleArrayChange('experience', index, 'description', e.target.value)} style={styles.textarea} />
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('experience', { company: '', position: '', startDate: '', endDate: '', description: '', type: '' })} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Experience
-                </button>
+                <button type="button" onClick={() => addItem('experience', { company: '', position: '', startDate: '', endDate: '', description: '', type: '' })} style={styles.addButton}>+ Add Experience</button>
               </div>
             </div>
 
@@ -1080,36 +718,19 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('education', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('education', index)} style={styles.removeButton}>×</button>
                     </div>
                     <div style={styles.formGrid}>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Degree</label>
-                        <input placeholder="e.g. Bachelor of Science" value={edu.degree} onChange={(e) => handleArrayChange('education', index, 'degree', e.target.value)} style={styles.input} />
-                      </div>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Institution</label>
-                        <input placeholder="e.g. University of Technology" value={edu.name} onChange={(e) => handleArrayChange('education', index, 'name', e.target.value)} style={styles.input} />
-                      </div>
+                      <input placeholder="Degree" value={edu.degree} onChange={(e) => handleArrayChange('education', index, 'degree', e.target.value)} style={styles.input} />
+                      <input placeholder="Institution" value={edu.name} onChange={(e) => handleArrayChange('education', index, 'name', e.target.value)} style={styles.input} />
                     </div>
-                    <div style={styles.formGrid}>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Year</label>
-                        <input placeholder="e.g. 2020" value={edu.year} onChange={(e) => handleArrayChange('education', index, 'year', e.target.value)} style={styles.input} />
-                      </div>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.inputLabel}>Result/GPA</label>
-                        <input placeholder="e.g. 3.8/4.0" value={edu.result} onChange={(e) => handleArrayChange('education', index, 'result', e.target.value)} style={styles.input} />
-                      </div>
+                    <div style={styles.smallGrid}>
+                      <input placeholder="Year" value={edu.year} onChange={(e) => handleArrayChange('education', index, 'year', e.target.value)} style={styles.input} />
+                      <input placeholder="Result/GPA" value={edu.result} onChange={(e) => handleArrayChange('education', index, 'result', e.target.value)} style={styles.input} />
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('education', { name: '', degree: '', year: '', result: '' })} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Education
-                </button>
+                <button type="button" onClick={() => addItem('education', { name: '', degree: '', year: '', result: '' })} style={styles.addButton}>+ Add Education</button>
               </div>
             </div>
 
@@ -1123,20 +744,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('skills', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('skills', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Skill</label>
-                      <input placeholder="e.g. JavaScript, React, Node.js" value={skill} onChange={(e) => handleArrayChange('skills', index, null, e.target.value)} style={styles.input} />
-                    </div>
+                    <input placeholder="e.g. JavaScript" value={skill} onChange={(e) => handleArrayChange('skills', index, null, e.target.value)} style={styles.input} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('skills', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Skill
-                </button>
+                <button type="button" onClick={() => addItem('skills', '')} style={styles.addButton}>+ Add Skill</button>
               </div>
             </div>
 
@@ -1150,20 +763,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('certifications', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('certifications', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Certification</label>
-                      <input placeholder="e.g. AWS Certified Developer" value={cert} onChange={(e) => handleArrayChange('certifications', index, null, e.target.value)} style={styles.input} />
-                    </div>
+                    <input placeholder="Certification" value={cert} onChange={(e) => handleArrayChange('certifications', index, null, e.target.value)} style={styles.input} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('certifications', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Certification
-                </button>
+                <button type="button" onClick={() => addItem('certifications', '')} style={styles.addButton}>+ Add Certification</button>
               </div>
             </div>
 
@@ -1177,20 +782,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('languages', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('languages', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Language</label>
-                      <input placeholder="e.g. English (Native), Spanish (Intermediate)" value={lang} onChange={(e) => handleArrayChange('languages', index, null, e.target.value)} style={styles.input} />
-                    </div>
+                    <input placeholder="Language" value={lang} onChange={(e) => handleArrayChange('languages', index, null, e.target.value)} style={styles.input} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('languages', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Language
-                </button>
+                <button type="button" onClick={() => addItem('languages', '')} style={styles.addButton}>+ Add Language</button>
               </div>
             </div>
 
@@ -1204,24 +801,13 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('projects', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('projects', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Project Name</label>
-                      <input placeholder="e.g. E-commerce Website" value={proj.name} onChange={(e) => handleArrayChange('projects', index, 'name', e.target.value)} style={styles.input} />
-                    </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Description</label>
-                      <textarea placeholder="Describe the project, technologies used, and your role..." value={proj.description} onChange={(e) => handleArrayChange('projects', index, 'description', e.target.value)} style={styles.textarea} />
-                    </div>
+                    <input placeholder="Project Name" value={proj.name} onChange={(e) => handleArrayChange('projects', index, 'name', e.target.value)} style={styles.input} />
+                    <textarea placeholder="Description" value={proj.description} onChange={(e) => handleArrayChange('projects', index, 'description', e.target.value)} style={styles.textarea} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('projects', { name: '', description: '' })} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Project
-                </button>
+                <button type="button" onClick={() => addItem('projects', { name: '', description: '' })} style={styles.addButton}>+ Add Project</button>
               </div>
             </div>
 
@@ -1235,20 +821,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('achievements', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('achievements', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Achievement</label>
-                      <textarea placeholder="Describe your achievement, award, or recognition..." value={ach} onChange={(e) => handleArrayChange('achievements', index, null, e.target.value)} style={styles.textarea} />
-                    </div>
+                    <textarea placeholder="Achievement" value={ach} onChange={(e) => handleArrayChange('achievements', index, null, e.target.value)} style={styles.textarea} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('achievements', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Achievement
-                </button>
+                <button type="button" onClick={() => addItem('achievements', '')} style={styles.addButton}>+ Add Achievement</button>
               </div>
             </div>
 
@@ -1262,20 +840,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('volunteer', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('volunteer', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Volunteer Experience</label>
-                      <textarea placeholder="Describe your volunteer work, organization, and impact..." value={vol} onChange={(e) => handleArrayChange('volunteer', index, null, e.target.value)} style={styles.textarea} />
-                    </div>
+                    <textarea placeholder="Volunteer Experience" value={vol} onChange={(e) => handleArrayChange('volunteer', index, null, e.target.value)} style={styles.textarea} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('volunteer', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Volunteer Experience
-                </button>
+                <button type="button" onClick={() => addItem('volunteer', '')} style={styles.addButton}>+ Add Volunteer Experience</button>
               </div>
             </div>
 
@@ -1289,20 +859,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('awards', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('awards', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Award</label>
-                      <input placeholder="e.g. Employee of the Month, Best Project Award" value={award} onChange={(e) => handleArrayChange('awards', index, null, e.target.value)} style={styles.input} />
-                    </div>
+                    <input placeholder="Award" value={award} onChange={(e) => handleArrayChange('awards', index, null, e.target.value)} style={styles.input} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('awards', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Award
-                </button>
+                <button type="button" onClick={() => addItem('awards', '')} style={styles.addButton}>+ Add Award</button>
               </div>
             </div>
 
@@ -1316,20 +878,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('publications', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('publications', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Publication</label>
-                      <textarea placeholder="Describe your publication, article, or research..." value={pub} onChange={(e) => handleArrayChange('publications', index, null, e.target.value)} style={styles.textarea} />
-                    </div>
+                    <textarea placeholder="Publication" value={pub} onChange={(e) => handleArrayChange('publications', index, null, e.target.value)} style={styles.textarea} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('publications', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Publication
-                </button>
+                <button type="button" onClick={() => addItem('publications', '')} style={styles.addButton}>+ Add Publication</button>
               </div>
             </div>
 
@@ -1343,20 +897,12 @@ export default function App() {
                   <div key={index} style={styles.entryCard}>
                     <div style={styles.entryHeader}>
                       <div style={styles.entryNumber}>{index + 1}</div>
-                      <button type="button" onClick={() => removeItem('hobbies', index)} style={styles.removeButton}>
-                        <span style={styles.removeIcon}>×</span>
-                      </button>
+                      <button type="button" onClick={() => removeItem('hobbies', index)} style={styles.removeButton}>×</button>
                     </div>
-                    <div style={styles.inputGroup}>
-                      <label style={styles.inputLabel}>Hobby / Interest</label>
-                      <input placeholder="e.g. Reading, Photography, Hiking" value={hobby} onChange={(e) => handleArrayChange('hobbies', index, null, e.target.value)} style={styles.input} />
-                    </div>
+                    <input placeholder="Hobby" value={hobby} onChange={(e) => handleArrayChange('hobbies', index, null, e.target.value)} style={styles.input} />
                   </div>
                 ))}
-                <button type="button" onClick={() => addItem('hobbies', '')} style={styles.addButton}>
-                  <span style={styles.addIcon}>+</span>
-                  Add Hobby
-                </button>
+                <button type="button" onClick={() => addItem('hobbies', '')} style={styles.addButton}>+ Add Hobby</button>
               </div>
             </div>
 
@@ -1366,37 +912,18 @@ export default function App() {
                 <div style={styles.sectionIcon}>📞</div>
               </div>
               <div style={styles.sectionBody}>
-                <div style={styles.inputGroup}>
-                  <label style={styles.inputLabel}>References</label>
-                  <textarea name="references" style={styles.textarea} value={form.references} onChange={handleChange} placeholder="Available upon request or list your references here..." />
-                </div>
+                <textarea name="references" style={styles.textarea} value={form.references} onChange={handleChange} placeholder="References..." />
               </div>
             </div>
 
             <div style={styles.actionSection}>
               <div style={styles.buttonGroup}>
                 <button type="submit" style={styles.primaryButton} disabled={loading}>
-                  {loading ? (
-                    <>
-                      <span style={styles.loadingSpinner}>⟳</span>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <span style={styles.generateIcon}>⚡</span>
-                      Generate CV
-                    </>
-                  )}
+                  {loading ? 'Generating...' : '⚡ Generate CV'}
                 </button>
-                <button type="button" onClick={() => { setCvHtml(''); }} style={styles.secondaryButton}>
-                  <span style={styles.clearIcon}>🗑️</span>
-                  Clear
-                </button>
+                <button type="button" onClick={() => setCvHtml('')} style={styles.secondaryButton}>🗑️ Clear</button>
                 {cvHtml && (
-                  <button type="button" onClick={handlePrint} style={styles.successButton}>
-                    <span style={styles.downloadIcon}>📄</span>
-                    Save / Print PDF
-                  </button>
+                  <button type="button" onClick={handlePrint} style={styles.successButton}>📄 Save / Print</button>
                 )}
               </div>
             </div>
@@ -1404,28 +931,18 @@ export default function App() {
         </div>
 
         <div style={styles.previewContainer}>
-          <div style={styles.previewHeader}>
-            <div style={styles.previewTitle}>CV Preview</div>
-            <div style={styles.previewIcon}>👁️</div>
-          </div>
+          <div style={styles.previewHeader}><div style={styles.previewTitle}>CV Preview</div></div>
           {cvHtml ? (
             <div ref={previewRef} style={styles.previewContent} dangerouslySetInnerHTML={{ __html: cvHtml }} />
           ) : (
-            <div style={styles.emptyPreview}>
-              <div style={styles.emptyIcon}>📋</div>
-              <div style={styles.emptyText}>Generated CV preview will appear here after you click Generate CV.</div>
-            </div>
+            <div style={styles.emptyPreview}><div style={styles.emptyText}>Preview will appear here...</div></div>
           )}
         </div>
       </div>
 
-      {/* Footer */}
       <div style={styles.footer}>
-        <p style={styles.footerText}>
-          © 2025 Mahmudul Hasan Sheepu. | All Rights Reserved
-        </p>
+        <p style={styles.footerText}>© 2025 Mahmudul Hasan Sheepu. | All Rights Reserved</p>
       </div>
     </div>
   );
 }
-
