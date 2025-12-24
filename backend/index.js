@@ -1,0 +1,120 @@
+
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// POST /generate-cv: expects { name, experience, education, skills }
+app.post('/generate-cv', async (req, res) => {
+  const {
+    name, email, phone, address, summary, experience, education, skills,
+    certifications, languages, projects, hobbies, references
+  } = req.body;
+  try {
+    const prompt = `Generate a professional CV using the following details. Format it clearly and professionally.\n\n` +
+      `Name: ${name}\n` +
+      `Email: ${email}\n` +
+      `Phone: ${phone}\n` +
+      `Address: ${address}\n` +
+      `Professional Summary: ${summary}\n` +
+      `Experience: ${experience}\n` +
+      `Education: ${education}\n` +
+      `Skills: ${skills}\n` +
+      `Certifications: ${certifications}\n` +
+      `Languages: ${languages}\n` +
+      `Projects: ${projects}\n` +
+      `Hobbies/Interests: ${hobbies}\n` +
+      `References: ${references}`;
+
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const cvContent = response.text();
+
+    res.json({ cv: cvContent });
+  } catch (error) {
+    console.error('Error generating CV:', error);
+    res.status(500).json({ error: 'Failed to generate CV', details: error.message });
+  }
+});
+
+// POST /generate-from-prompt: expects { prompt }
+app.post('/generate-from-prompt', async (req, res) => {
+  const { prompt } = req.body;
+  try {
+    const systemPrompt = `You are an expert CV parser. Extract information from the user's text and return a JSON object strictly following this structure:
+    {
+      "name": "string",
+      "email": "string",
+      "phone": "string",
+      "address": "string",
+      "linkedin": "string",
+      "github": "string",
+      "website": "string",
+      "dob": "string (YYYY-MM-DD)",
+      "nationality": "string",
+      "summaryTitle": "string",
+      "summaryParagraph": "string",
+      "objective": "string",
+      "experience": [
+        { "company": "string", "position": "string", "startDate": "string", "endDate": "string", "description": "string", "type": "string" }
+      ],
+      "education": [
+        { "name": "string", "degree": "string", "year": "string", "result": "string" }
+      ],
+      "skills": ["string"],
+      "certifications": ["string"],
+      "languages": ["string"],
+      "projects": [
+        { "name": "string", "description": "string" }
+      ],
+      "achievements": ["string"],
+      "volunteer": ["string"],
+      "awards": ["string"],
+      "publications": ["string"],
+      "hobbies": ["string"],
+      "references": "string"
+    }
+    
+    If information is missing, use empty strings or empty arrays. Do NOT wrap the output in markdown code blocks. Return raw JSON only.`;
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite-preview-02-05' });
+    const result = await model.generateContent([systemPrompt, prompt]);
+    const response = await result.response;
+    const text = response.text();
+
+    // Clean up markdown/code block wrappers if present
+    const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    let data;
+    try {
+      data = JSON.parse(cleanJson);
+    } catch (parseErr) {
+      console.error('Failed to parse Gemini response as JSON:', cleanJson);
+      return res.status(500).json({ error: 'Gemini did not return valid JSON', details: cleanJson });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error generating from prompt:', error);
+    const status = error.status || 500;
+    const message = error.message || 'Failed to parse prompt';
+    res.status(status).json({ error: message, details: error });
+  }
+});
+
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Backend running on port ${PORT}`);
+});
