@@ -752,7 +752,8 @@ export default function App() {
     if (!aiPrompt.trim()) return;
     setIsAiGenerating(true);
     try {
-      const response = await axios.post('http://localhost:5001/generate-from-prompt', { prompt: aiPrompt });
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await axios.post(`${apiUrl}/generate-from-prompt`, { prompt: aiPrompt });
       setForm(prev => ({ ...prev, ...response.data }));
       setAiPrompt('');
     } catch (error) {
