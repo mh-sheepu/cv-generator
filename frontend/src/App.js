@@ -1422,7 +1422,7 @@ export default function App() {
       {/* Footer */}
       <div style={styles.footer}>
         <p style={styles.footerText}>
-          Mahmudul Hasan Sheepu
+          © 2025 Mahmudul Hasan Sheepu. | All Rights Reserved
         </p>
       </div>
     </div>
