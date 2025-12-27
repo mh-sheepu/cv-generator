@@ -1,60 +1,152 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import Select from 'react-select';
 
-// Helper Functions for HTML Generation
-const esc = s => (typeof s === 'string' ? s : '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const para = (text) => typeof text === 'string' && text.trim() ? `<div style="margin:6px 0">${esc(text).replace(/\n/g, '<br/>')}</div>` : '';
-const bullets = (items) => {
-  if (!Array.isArray(items) || items.length === 0) return '';
-  return `<ul style="margin:6px 0 0 18px">${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
-};
-
-function makeHtml(form) {
+function makeHtml(form, selectedTemplate, photo) {
+  const esc = s => (typeof s === 'string' ? s : '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const para = (text) => typeof text === 'string' && text.trim() ? `<div style="margin:6px 0">${esc(text).replace(/\n/g, '<br/>')}</div>` : '';
+  const bullets = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return '';
+    return `<ul style="margin:6px 0 0 18px">${items.map(item => `<li>${esc(item)}`).join('')}</ul>`;
+  };
   const contactLine = [form.email, form.phone, form.linkedin, form.github, form.website].filter(Boolean).map(esc).join(' | ');
-
-  return `
-  <div style="font-family: Arial, Helvetica, sans-serif; color:#111; max-width:800px; margin:0 auto;">
-    <div style="text-align:center; margin-bottom:6px;">
-      <div style="font-size:36px; font-weight:900; letter-spacing:1px;">${esc(form.name)}</div>
-      <div style="font-size:14px; margin-top:6px; font-weight:700; color:#2d3748">${esc(form.summaryTitle || '')}</div>
-      <div style="font-size:12px; margin-top:8px; color:#333">${contactLine}</div>
-      ${form.address ? `<div style="font-size:12px; margin-top:4px; color:#333">${esc(form.address)}</div>` : ''}
-      ${form.dob || form.nationality ? `<div style="font-size:12px; margin-top:4px; color:#333">${[form.dob, form.nationality].filter(Boolean).map(esc).join(' | ')}</div>` : ''}
+  if (selectedTemplate === 'modern') {
+    return `
+    <div style="font-family: Arial, Helvetica, sans-serif; color:#222; max-width:900px; margin:0 auto; background:#fff; border-radius:16px; box-shadow:0 2px 16px #0001; overflow:hidden;">
+      <div style="background:#f9a825; height:16px; width:100%;"></div>
+      <div style="display:flex; flex-wrap:wrap;">
+        <div style="flex:2; padding:32px 32px 32px 40px; min-width:320px;">
+          <div style="font-size:2.2rem; font-weight:900; letter-spacing:1px; margin-bottom:8px;">${esc(form.name)}</div>
+          ${form.summaryParagraph ? `<div style="margin-bottom:24px;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">PROFESSIONAL SUMMARY</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${para(form.summaryParagraph)}</div>` : ''}
+          ${form.experience.length > 0 ? `<div style="margin-bottom:24px;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">EXPERIENCE</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${form.experience.map(exp => `<div style="margin-bottom:10px;"><div style="font-weight:700;">${esc(exp.position)}</div><div style="color:#666;font-size:0.95rem;">${[exp.company, exp.type, [exp.startDate, exp.endDate].filter(Boolean).join(' – ')].filter(Boolean).join(', ')}</div>${exp.description ? para(exp.description) : ''}</div>`).join('')}</div>` : ''}
+          ${form.education.length > 0 ? `<div style="margin-bottom:24px;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">EDUCATION</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${form.education.map(edu => `<div style="margin-bottom:10px;"><div style="font-weight:700;">${esc(edu.degree)}</div><div style="color:#666;font-size:0.95rem;">${[edu.name, edu.year].filter(Boolean).join(' — ')}</div>${edu.result ? `<div style="margin:4px 0">${esc(edu.result)}</div>` : ''}</div>`).join('')}</div>` : ''}
+        </div>
+        <div style="flex:1; background:#f5f5f5; padding:32px 24px; min-width:220px;">
+          <div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">CONTACT</div>
+          <div style="font-size:0.98rem; margin-bottom:8px;">${esc(form.address)}</div>
+          <div style="font-size:0.98rem; margin-bottom:8px;">${contactLine}</div>
+          ${form.skills.length > 0 ? `<div style="margin:18px 0 0 0;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">CORE QUALIFICATIONS</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${bullets(form.skills.filter(s => typeof s === 'string' && s.trim()))}</div>` : ''}
+          ${form.languages.length > 0 ? `<div style="margin:18px 0 0 0;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">LANGUAGES</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${bullets(form.languages.filter(l => typeof l === 'string' && l.trim()))}</div>` : ''}
+          ${form.certifications.length > 0 ? `<div style="margin:18px 0 0 0;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">ADDITIONAL INFORMATION</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${bullets(form.certifications.filter(c => typeof c === 'string' && c.trim()))}</div>` : ''}
+          ${form.hobbies.length > 0 ? `<div style="margin:18px 0 0 0;"><div style="font-weight:700; color:#f9a825; font-size:1.1rem; margin-bottom:6px;">INTERESTS</div><div style="border-top:2px solid #eee; margin-bottom:8px;"></div>${bullets(form.hobbies.filter(h => typeof h === 'string' && h.trim()))}</div>` : ''}
+        </div>
+      </div>
     </div>
-
-    ${form.objective ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">OBJECTIVE</h3>${para(form.objective)}` : ''}
-
-    ${form.summaryParagraph ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">PROFESSIONAL SUMMARY</h3>${para(form.summaryParagraph)}` : ''}
-
-    ${form.experience.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">WORK EXPERIENCE</h3>${form.experience.map(exp => `${exp.position ? `<div style="font-weight:700;margin:8px 0 4px 0">${esc(exp.position)}</div>` : ''}${exp.company || exp.startDate || exp.endDate || exp.type ? `<div style="color:#666;font-size:12px;margin-bottom:6px">${[exp.type, exp.company, [exp.startDate, exp.endDate].filter(Boolean).join(' – ')].filter(Boolean).join(', ')}</div>` : ''}${exp.description ? para(exp.description) : ''}`).join('')}` : ''}
-
-    ${form.education.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">EDUCATION</h3>${form.education.map(edu => `${edu.degree ? `<div style="font-weight:700;margin:8px 0 4px 0">${esc(edu.degree)}</div>` : ''}${edu.name || edu.year ? `<div style="color:#666;font-size:12px;margin-bottom:6px">${[edu.name, edu.year].filter(Boolean).join(' — ')}</div>` : ''}${edu.result ? `<div style="margin:4px 0">${esc(edu.result)}</div>` : ''}`).join('')}` : ''}
-
-    ${form.skills.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">SKILLS</h3>${bullets(form.skills.filter(s => typeof s === 'string' && s.trim()))}` : ''}
-
-    ${form.certifications.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">CERTIFICATIONS</h3>${bullets(form.certifications.filter(c => typeof c === 'string' && c.trim()))}` : ''}
-
-    ${form.languages.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">LANGUAGES</h3>${bullets(form.languages.filter(l => typeof l === 'string' && l.trim()))}` : ''}
-
-    ${form.projects.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">PROJECTS</h3>${form.projects.filter(p => p.name || p.description).map(p => `${p.name ? `<div style="font-weight:700;margin:8px 0 4px 0">${esc(p.name)}</div>` : ''}${p.description ? para(p.description) : ''}`).join('')}` : ''}
-
-    ${form.achievements.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">ACHIEVEMENTS</h3>${form.achievements.filter(a => typeof a === 'string' && a.trim()).map(a => para(a)).join('')}` : ''}
-
-    ${form.volunteer.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">VOLUNTEER EXPERIENCE</h3>${form.volunteer.filter(v => typeof v === 'string' && v.trim()).map(v => para(v)).join('')}` : ''}
-
-    ${form.awards.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">AWARDS</h3>${bullets(form.awards.filter(a => typeof a === 'string' && a.trim()))}` : ''}
-
-    ${form.publications.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">PUBLICATIONS</h3>${form.publications.filter(p => typeof p === 'string' && p.trim()).map(p => para(p)).join('')}` : ''}
-
-    ${form.hobbies.length > 0 ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">HOBBIES / INTERESTS</h3>${bullets(form.hobbies.filter(h => typeof h === 'string' && h.trim()))}` : ''}
-
-    ${form.references ? `<h3 style="margin-top:18px;border-bottom:1px solid #dfe6ee;padding-bottom:6px;font-size:13px;">REFERENCES</h3>${para(form.references)}` : ''}
-  </div>
-  `;
+    `;
+  }
+  if (selectedTemplate === 'classic') {
+    // Classic template based on provided example
+    return `
+      <div style="font-family: Arial, Helvetica, sans-serif; color:#222; max-width:800px; margin:0 auto; background:#fff; border-radius:12px; box-shadow:0 2px 8px #0001; padding:32px;">
+        <div style="display:flex; align-items:flex-start; gap:32px;">
+          <div style="flex:2;">
+            <h1 style="font-size:2rem; font-weight:900; margin-bottom:8px;">CV</h1>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+              <div>
+                <div style="margin-bottom:8px;"><strong>Name</strong><br/>${form.name}</div>
+                <div style="margin-bottom:8px;"><strong>Address</strong><br/>${form.address}</div>
+                <div style="margin-bottom:8px;"><strong>Email</strong><br/>${form.email}</div>
+              </div>
+              <div>
+                <div style="margin-bottom:8px;"><strong>Birthday</strong><br/>${form.dob}</div>
+                <div style="margin-bottom:8px;"><strong>Phone</strong><br/>${form.phone}</div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1; text-align:right;">
+            ${photo ? `<img src='${photo}' alt='Profile' style='width:120px; border-radius:8px;' />` : ''}
+          </div>
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Career</div>
+          ${form.experience.map((exp, i) => `<div style="background:${i%2===0?'#f5f5f5':'#fff'}; margin-bottom:8px; padding:8px 12px; border-radius:4px;"><div style="font-weight:700;">${exp.position}</div><div>${exp.company} (${exp.startDate} - ${exp.endDate})</div><div>${exp.description || ''}</div></div>`).join('')}
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Education</div>
+          ${form.education.map((edu, i) => `<div style="background:${i%2===0?'#f5f5f5':'#fff'}; margin-bottom:8px; padding:8px 12px; border-radius:4px;"><div style="font-weight:700;">${edu.degree}</div><div>${edu.name} (${edu.year})</div></div>`).join('')}
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Skills and Interests</div>
+          <div><strong>Language skills</strong>: ${form.languages.join(', ')}</div>
+          <div><strong>Computer skills</strong>: ${form.skills.join(', ')}</div>
+          <div><strong>Interests</strong>: ${form.hobbies.join(', ')}</div>
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Certifications</div>
+          ${form.certifications.length > 0 ? `<div style="background:#f5f5f5; margin-bottom:8px; padding:8px 12px; border-radius:4px;">${form.certifications.join(', ')}</div>` : '<div style="color:#888;">None</div>'}
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Awards</div>
+          ${form.awards.length > 0 ? `<div style="background:#f5f5f5; margin-bottom:8px; padding:8px 12px; border-radius:4px;">${form.awards.join(', ')}</div>` : '<div style="color:#888;">None</div>'}
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Publications</div>
+          ${form.publications.length > 0 ? `<div style="background:#f5f5f5; margin-bottom:8px; padding:8px 12px; border-radius:4px;">${form.publications.join(', ')}</div>` : '<div style="color:#888;">None</div>'}
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Volunteer Experience</div>
+          ${form.volunteer.length > 0 ? `<div style="background:#f5f5f5; margin-bottom:8px; padding:8px 12px; border-radius:4px;">${form.volunteer.join(', ')}</div>` : '<div style="color:#888;">None</div>'}
+        </div>
+        <div style="margin-top:24px;">
+          <div style="font-weight:700; background:#e0e0e0; padding:6px 12px; border-radius:4px; margin-bottom:8px;">Additional Info</div>
+          <div><strong>Nationality</strong>: ${form.nationality}</div>
+          <div><strong>LinkedIn</strong>: ${form.linkedin}</div>
+          <div><strong>GitHub</strong>: ${form.github}</div>
+          <div><strong>Website</strong>: ${form.website}</div>
+        </div>
+        <div style="margin-top:32px; font-size:0.95rem; color:#666;">London, 1st January 2023</div>
+        <div style="margin-top:12px; font-size:1.2rem; color:#666;">${form.references ? form.references : ''}</div>
+      </div>
+    `;
+  }
+  if (selectedTemplate === 'ats') {
+    // ATS template based on provided example
+    return `
+      <div style="font-family: Arial, Helvetica, sans-serif; color:#222; max-width:800px; margin:0 auto; background:#fff; border-radius:8px; box-shadow:0 2px 8px #0001; padding:32px;">
+        <div style="text-align:center; margin-bottom:8px;">
+          <h1 style="font-size:2.2rem; font-weight:900; margin-bottom:4px;">${form.name}</h1>
+          <div style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">${form.summaryTitle || ''}</div>
+          <div style="font-size:1rem; color:#444; margin-bottom:8px;">${[form.address, form.email, form.phone, form.linkedin].filter(Boolean).join(' | ')}</div>
+        </div>
+        <div style="margin-bottom:18px;">
+          <div style="font-weight:700; text-transform:uppercase; font-size:1.1rem; margin-bottom:2px;">Professional Summary</div>
+          <hr style="border:0; border-top:2px solid #222; margin:4px 0 8px 0;" />
+          <div>${form.summaryParagraph || ''}</div>
+        </div>
+        <div style="margin-bottom:18px;">
+          <div style="font-weight:700; text-transform:uppercase; font-size:1.1rem; margin-bottom:2px;">Work Experience</div>
+          <hr style="border:0; border-top:2px solid #222; margin:4px 0 8px 0;" />
+          ${form.experience.map(exp => `<div style="margin-bottom:12px;"><div style="font-weight:700;">${exp.position}</div><div>${exp.company} | ${exp.startDate} – ${exp.endDate}</div><ul>${exp.description ? exp.description.split('\n').map(line => `<li>${line}</li>`).join('') : ''}</ul></div>`).join('')}
+        </div>
+        <div style="margin-bottom:18px;">
+          <div style="font-weight:700; text-transform:uppercase; font-size:1.1rem; margin-bottom:2px;">Education</div>
+          <hr style="border:0; border-top:2px solid #222; margin:4px 0 8px 0;" />
+          ${form.education.map(edu => `<div style="margin-bottom:12px;"><div style="font-weight:700;">${edu.degree}</div><div>${edu.name} | Graduated: ${edu.year}</div></div>`).join('')}
+        </div>
+        <div style="margin-bottom:18px;">
+          <div style="font-weight:700; text-transform:uppercase; font-size:1.1rem; margin-bottom:2px;">Skills</div>
+          <hr style="border:0; border-top:2px solid #222; margin:4px 0 8px 0;" />
+          <ul>${form.skills.map(skill => `<li>${skill}</li>`).join('')}</ul>
+        </div>
+        <div style="margin-bottom:18px;">
+          <div style="font-weight:700; text-transform:uppercase; font-size:1.1rem; margin-bottom:2px;">Certifications</div>
+          <hr style="border:0; border-top:2px solid #222; margin:4px 0 8px 0;" />
+          <ul>${form.certifications.map(cert => `<li>${cert}</li>`).join('')}</ul>
+        </div>
+      </div>
+    `;
+  }
+  // ...existing code for other templates...
 }
 
 export default function App() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [template, setTemplate] = useState({ value: 'modern', label: 'Modern' });
+  const templateOptions = [
+    { value: 'modern', label: 'Modern' },
+    { value: 'classic', label: 'Classic' },
+    { value: 'ats', label: 'ATS (Stock)' }
+  ];
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -511,14 +603,43 @@ export default function App() {
   const [cvHtml, setCvHtml] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [photo, setPhoto] = useState(null);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminError, setAdminError] = useState('');
+  const [adminUser, setAdminUser] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [cvList, setCvList] = useState([]);
 
   const previewRef = useRef(null);
+
+  // Save each generated CV to localStorage
+  useEffect(() => {
+    if (cvHtml) {
+      const allCVs = JSON.parse(localStorage.getItem('cvList') || '[]');
+      allCVs.push(cvHtml);
+      localStorage.setItem('cvList', JSON.stringify(allCVs));
+      setCvList(allCVs);
+    }
+  }, [cvHtml]);
+
+  // Load CVs on admin login
+  useEffect(() => {
+    if (adminLoggedIn) {
+      const allCVs = JSON.parse(localStorage.getItem('cvList') || '[]');
+      setCvList(allCVs);
+    }
+  }, [adminLoggedIn]);
+
+  // Deployment-friendly API URL
+  const apiUrl = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+    ? 'https://cv-generator-backend.vercel.app' // Change to your Vercel backend URL
+    : (process.env.REACT_APP_API_URL || 'http://localhost:5001');
 
   const handleGenerateFromPrompt = async () => {
     if (!aiPrompt.trim()) return;
     setIsAiGenerating(true);
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       const response = await axios.post(`${apiUrl}/generate-from-prompt`, { prompt: aiPrompt });
       setForm(prev => ({ ...prev, ...response.data }));
       setAiPrompt('');
@@ -558,8 +679,11 @@ export default function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    setCvHtml(makeHtml(form));
+    setCvHtml(makeHtml(form, template.value, photo));
     setLoading(false);
+    setTimeout(() => {
+      downloadCV();
+    }, 500);
   };
 
   const handlePrint = () => {
@@ -578,15 +702,75 @@ export default function App() {
     setTimeout(() => w.print(), 300);
   };
 
+  const downloadCV = (cvHtml, template) => {
+    if (!cvHtml) return;
+    const blob = new Blob([cvHtml], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `cv-${template.value || template}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Add photo to form state
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Admin login handler
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminUser === 'admin' && adminPass === 'sheepu@2025') {
+      setAdminLoggedIn(true);
+      setAdminError('');
+    } else {
+      setAdminError('Invalid credentials');
+    }
+  };
+
   return (
     <div style={styles.container}>
-      <style>
-        {`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+      {/* Admin Button and Modal */}
+      <div style={{ position: 'absolute', top: 16, right: 32, zIndex: 1000 }}>
+        <button onClick={() => setShowAdmin(true)} style={{ padding: '10px 20px', borderRadius: 8, background: '#6366f1', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Admin</button>
+      </div>
+      {showAdmin && !adminLoggedIn && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <form onSubmit={handleAdminLogin} style={{ background: '#fff', padding: 32, borderRadius: 16, boxShadow: '0 4px 24px #0002', minWidth: 320 }}>
+            <h2 style={{ marginBottom: 18 }}>Admin Login</h2>
+            <input type="text" placeholder="Username" value={adminUser} onChange={e => setAdminUser(e.target.value)} style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #ddd' }} />
+            <input type="password" placeholder="Password" value={adminPass} onChange={e => setAdminPass(e.target.value)} style={{ width: '100%', marginBottom: 12, padding: 10, borderRadius: 8, border: '1px solid #ddd' }} />
+            {adminError && <div style={{ color: 'red', marginBottom: 10 }}>{adminError}</div>}
+            <button type="submit" style={{ padding: '10px 20px', borderRadius: 8, background: '#10b981', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer', width: '100%' }}>Login</button>
+            <button type="button" onClick={() => setShowAdmin(false)} style={{ marginTop: 10, padding: '8px 20px', borderRadius: 8, background: '#eee', color: '#333', fontWeight: 500, border: 'none', cursor: 'pointer', width: '100%' }}>Cancel</button>
+          </form>
+        </div>
+      )}
+      {showAdmin && adminLoggedIn && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 2000, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 16, boxShadow: '0 4px 24px #0002', minWidth: 400, maxWidth: 900, marginTop: 40 }}>
+            <h2 style={{ marginBottom: 18 }}>Admin Dashboard</h2>
+            <div style={{ marginBottom: 18, fontWeight: 700 }}>Total CVs Generated: {cvList.length}</div>
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', border: '1px solid #eee', borderRadius: 8, padding: 12, background: '#fafafa' }}>
+              {cvList.length === 0 ? <div>No CVs generated yet.</div> : cvList.map((cv, idx) => (
+                <div key={idx} style={{ marginBottom: 24, borderBottom: '1px solid #eee', paddingBottom: 16 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 8 }}>CV #{idx + 1}</div>
+                  <div dangerouslySetInnerHTML={{ __html: cv }} />
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={() => { setAdminLoggedIn(false); setShowAdmin(false); }} style={{ marginTop: 18, padding: '10px 20px', borderRadius: 8, background: '#dc2626', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Logout</button>
+          </div>
+        </div>
+      )}
       <div style={styles.mainCard}>
         <div style={styles.header}>
           <div style={styles.headerPattern}></div>
@@ -916,6 +1100,18 @@ export default function App() {
               </div>
             </div>
 
+            <div style={styles.sectionCard}>
+              <div style={styles.sectionHeader}>
+                <div style={styles.sectionTitle}>Upload Photo</div>
+              </div>
+              <div style={styles.sectionBody}>
+                <input type="file" accept="image/*" onChange={handlePhotoUpload} />
+                {photo && (
+                  <img src={photo} alt="Profile" style={{ marginTop: 12, maxWidth: 120, borderRadius: 8 }} />
+                )}
+              </div>
+            </div>
+
             <div style={styles.actionSection}>
               <div style={styles.buttonGroup}>
                 <button type="submit" style={styles.primaryButton} disabled={loading}>
@@ -923,8 +1119,31 @@ export default function App() {
                 </button>
                 <button type="button" onClick={() => setCvHtml('')} style={styles.secondaryButton}>🗑️ Clear</button>
                 {cvHtml && (
-                  <button type="button" onClick={handlePrint} style={styles.successButton}>📄 Save / Print</button>
+                  <button type="button" onClick={() => downloadCV(cvHtml, template)} style={styles.successButton}>📄 Save / Print</button>
                 )}
+              </div>
+              <div style={{ marginTop: 24, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
+                <label style={{ ...styles.inputLabel, marginBottom: 6 }}>CV Template</label>
+                <Select
+                  options={templateOptions}
+                  value={template}
+                  onChange={setTemplate}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      width: '100%',
+                      borderRadius: 12,
+                      fontSize: '1rem',
+                      borderColor: '#e2e8f0',
+                      boxShadow: 'none',
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      borderRadius: 12,
+                      fontSize: '1rem',
+                    })
+                  }}
+                />
               </div>
             </div>
           </form>
